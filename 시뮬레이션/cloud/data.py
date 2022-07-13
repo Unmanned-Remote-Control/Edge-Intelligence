@@ -50,8 +50,8 @@ def get_data_set(name="train", cifar=10):
 		y = np.array(datadict['labels'])
 
 		x = np.array(x, dtype=float) / 255.0
-		x = x.reshape([-1, 3, 32, 32])
-		x = x.transpose([0, 1, 2, 3])
+		x = x.reshape([-1, 3, 32, 32]) # 뭐지 4차원으로 reshape: -1 부분은 "원래 크기 = ?*3*32*32" 의 방정식을 만족시키는 ? 값으로 정해짐.  
+		x = x.transpose([0, 1, 2, 3]) # 머고 차원을 좀 바꾸나?..
 		#x = x.reshape(-1, 32*32*3)
 
 	def dense_to_one_hot(labels_dense, num_classes=10):

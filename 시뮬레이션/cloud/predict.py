@@ -6,8 +6,8 @@ import torch.utils.data as Data
 
 from data import get_data_set
 
-test_x,test_y,test_l=get_data_set("test")
-test_x=torch.from_numpy(test_x[0:100]).float()
+test_x,test_y,test_l=get_data_set("test") # test data 불러오기
+test_x=torch.from_numpy(test_x[0:100]).float() 
 test_y=torch.from_numpy(test_y[0:100]).long()
 
 _IMG_SIZE = 32
@@ -16,7 +16,7 @@ _BATCH_SIZE = 128
 _CLASS_SIZE = 10
 _SAVE_PATH = "model/"
 
-model=torch.load(_SAVE_PATH+"layermodel.pkl", map_location='cpu')
+model=torch.load(_SAVE_PATH+"layermodel.pkl", map_location='cpu') # layer model load하기 
 device = torch.device("cpu")
 #model.to(device)
 
