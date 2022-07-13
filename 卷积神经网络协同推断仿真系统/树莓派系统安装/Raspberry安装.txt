@@ -1,8 +1,8 @@
-RaspberryÏµÍ³°²×°£º
-ÏÂÔØRaspberryÏµÍ³¾µÏñÎÄ¼ş
-°²×°SDFormatter£¬¸ñÊ½»¯TF¿¨
-°²×°Win32DiskImager£¬½«ÏµÍ³Ğ´ÈëTF¿¨ÖĞ
-ÔÚTF¿¨ÖĞ/bootÄ¿Â¼ÏÂĞÂ½¨wpa_supplicant.conf ÎÄ¼ş£¬ÎÄ¼şÄÚÈİÈçÏÂ
+Raspberryì‹œìŠ¤í…œ ì„¤ì¹˜ï¼š
+Raspberry ì‹œìŠ¤í…œ ë¯¸ëŸ¬ë§ íŒŒì¼ ë‹¤ìš´ë¡œë“œ
+SDFormatter ì„¤ì¹˜, TFì¹´ë“œ í¬ë§·
+Win32DiskImagerë¥¼ ì„¤ì¹˜í•˜ê³  TFì¹´ë“œì— ì‹œìŠ¤í…œ ì“°ê¸°
+TFì¹´ë“œ ì¤‘/boot ë””ë ‰í† ë¦¬ì— wpa_supplicant.conf íŒŒì¼ì„ ìƒˆë¡œ ë§Œë“­ë‹ˆë‹¤. íŒŒì¼ ë‚´ìš©ì€ ë‹¤ìŒê³¼ ê°™ìŠµë‹ˆë‹¤.
 country=CN
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -15,14 +15,14 @@ priority=2
 scan_ssid=1
 }
 
-ÔÚTF¿¨ÖĞĞÂ½¨sshÎÄ¼ş¼Ğ
-½«TF¿¨²åµ½Ê÷İ®ÅÉÉÏ£¬Æô¶¯ÏµÍ³
+TF ì¹´ë“œì— ìƒˆ ssh í´ë” ë§Œë“¤ê¸°
+ë¼ì¦ˆë² ë¦¬ íŒŒì´ì— TF ì¹´ë“œ ê½‚ê¸°, ì‹œìŠ¤í…œ ë¶€íŒ…í†µí•˜ë‹¤
 
 
-RaspberryÏµÍ³ÏÂ°²×°Python¼°Tensorflow:
+Raspberry ì‹œìŠ¤í…œì— Python ë° Tensorflow ì„¤ì¹˜:
 sudo apt-get install python3-pip python3-dev
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev 
 pip3 install numpy
 pip3 install scipy
 pip3 install sklearn
-pip3 install tensorflow.whl(ÏÂÔØÎÄ¼ş)
+pip3 install tensorflow.whl(íŒŒì¼ ë‹¤ìš´ë¡œë“œ)
