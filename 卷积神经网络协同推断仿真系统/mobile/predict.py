@@ -20,10 +20,10 @@ model=torch.load(_SAVE_PATH+"alexnet.pkl", map_location='cpu')
 device = torch.device("cpu")
 #model.to(device)
 
-# 定义数据库
+# 데이터베이스 정의
 test_dataset = Data.TensorDataset(test_x, test_y)
 
-# 定义数据加载器
+# 데이터 로더 정의
 test_loader = Data.DataLoader(dataset = test_dataset, batch_size = _BATCH_SIZE, shuffle = False)
 
 correct_classified = 0
