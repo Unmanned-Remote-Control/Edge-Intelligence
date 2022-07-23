@@ -19,8 +19,8 @@ _CLASS_SIZE = 10
 ALEXNET_MODEL_PATH="model/alexnetlayermodel.pkl"
 VGG16_MODEL_PATH="model/vgg16layermodel.pkl"
 
-IP="192.168.123.10"
-PORT=8081
+IP="114.70.21.240"
+PORT=10154
 
 class Data(object):
 
