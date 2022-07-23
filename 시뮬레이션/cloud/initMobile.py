@@ -98,7 +98,7 @@ if __name__=="__main__":
 	client.connect((IP, PORT))
 	print("Cloud connection successful, ready for computing mission")
 	print("Task submitted. Unload decision made")
-	x=[1,1,1,1,1,1,1,1,1,1,1,1,1] # 레이어 개수가 아닌가본데 - 13 개 (alex net 은 8개 레이어, vgg 는  conv 13개, fc 3개 )
+	x=[1,1,1,1,1,1,1,1,1,1,1,1,1] # 레이어 개수로 추측 
 	print("Start running computational tasks")
 	start=time.time()
 	if x[0]==1: # x의 0번째 값이 1 인 경우 
