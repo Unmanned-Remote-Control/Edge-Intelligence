@@ -30,7 +30,7 @@ def run(model, inputData, startLayer, endLayer):
 	outputs = model(inputData, startLayer, endLayer, False)
 	return outputs
 
-def test(outputs, test_x, test_y)
+def test(outputs, test_x, test_y):
 	prediction = torch.max(outputs.data, 1)
 	correct_classified += np.sum(prediction[1].numpy() == test_y.numpy())
 	acc=(correct_classified/len(test_x))*100
