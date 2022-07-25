@@ -31,7 +31,10 @@ class Data(object):
 
 def run(model, inputData, startLayer, endLayer):
 	print("Cloud running %d to %d layer" % (startLayer, endLayer))
+	start = time.time()
 	outputs = model(inputData, startLayer, endLayer, False)
+	end = time.time()
+	print("서버 계산시간",end-start)
 	return outputs
 
 def sendData(server, inputData, startLayer, endLayer):
