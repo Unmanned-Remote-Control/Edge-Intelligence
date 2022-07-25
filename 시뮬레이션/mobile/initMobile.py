@@ -11,6 +11,7 @@ import pickle
 import io
 import sys
 import time
+import LMOS
 
 _IMG_SIZE = 32
 _NUM_CHANNELS = 3
@@ -81,6 +82,7 @@ def receiveData(client, model, x, test_x, test_y):
 			if count==len(x)-1:
 				acc=test(outputs, test_x, test_y)
 				end=time.time()
+				runtime = end - start
 				print("작업 실행 완료, 응답 시간:%f, 정확도:%f" % (runtime, acc))
 				client.close()
 				break
@@ -104,9 +106,10 @@ if __name__=="__main__":
 	client.connect((IP, PORT))
 	print("클라우드 연결 성공, ready for computing mission")
 	print("Task submitted. Unload decision made.")
-	#x=[1,1,1,1,1,1,1,1,1,1,1,1,1]
-	#x=[0,0,0,0,0,0,0,0,0,0,0,0,0]
-	x=[0,1,0,1,1,1,0,0,0,1,1,1,1]
+	split_point = LMOS.LMOS_Algorithm()
+	x=[1,1,1,1,1,1,1,1,1,1,1,1,1]
+	for i in range(split_point):
+		x[i] = 0
 	print("Start running computational tasks")
 	start=time.time()
 	if x[0]==1:
