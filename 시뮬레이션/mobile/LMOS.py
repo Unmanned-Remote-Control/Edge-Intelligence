@@ -113,9 +113,9 @@ def F1(x_1):
     # RPi4 - 64-bit quad-core Cortex-A72 processor 논문에선 quad-core 1.5 GHz processor -> 그러면 4, 1.5 ??
     # Server - 내 PC (AMD Ryzen 7 3700X 8-Core Processor 3.59 GHz) -> 그러면 8, 3.59 ??
     # The RPi4 modules and the cloud server are connected to a Wi-Fi network providing a bandwidth of 10 Mbps 로 논문에 나와있는데 정해놓고 제공하는 방식인가 -> 그러면 10?
-    return Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500) \
-           + Transmission_Latency(x_1, bandwidth=10) \
-           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)
+    return Conv_Latency(computation_amount_local, CPU_Cores=1, Processor_Speed=1500) \
+           + Transmission_Latency(x_1, bandwidth=0.5) \
+           + Conv_Latency(computation_amount_server, CPU_Cores=1, Processor_Speed=3590)
 
 
 def F2(x_1):
@@ -196,7 +196,7 @@ def LMOS_Algorithm():
 
 
 #if __name__ == "__main__":
-    #print(LMOS_Algorithm())
+    print(LMOS_Algorithm())
     # print(F1(0))
     # print(F1(1))
     # print(F1(2))
