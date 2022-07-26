@@ -24,7 +24,6 @@ def getAvailable(path):
     available = diskInfo.f_bsize * diskInfo.f_bavail
     # 사용 가능 용량을 키로 바이트(M)로 표시
     available = available / Unit('M')
-
     return available
 
 
@@ -36,7 +35,6 @@ def Conv_Latency(computation_amount, CPU_Cores, Processor_Speed):
 
 def Transmission_Latency(x, bandwidth):
     output_ = output_size(x)
-    print("layer " + str(x) + "에서의 output_size : " + str(output_))
     T_tx = output_ / bandwidth
     return T_tx
 
@@ -53,6 +51,8 @@ def Calaulating_model_size(x):
         x = 0
 
     for layer in model.features[:x_]:
+        weights = 0
+        biases = 0
         if isinstance(layer, (nn.Conv2d, nn.Conv1d)):
             weights = layer.out_channels * (layer.kernel_size[0] * layer.kernel_size[1]) * depth_pre
             biases = layer.out_channels
@@ -66,13 +66,15 @@ def Calaulating_model_size(x):
         total += layer_1.out_features * ((pooling.kernel_size ** 2) * depth_pre) + layer_1.out_features
 
         for layer in model.classifier[1:x]:
+            weights = 0
+            biases = 0
             if isinstance(layer, nn.Linear):
                 weights += layer.out_features * layer.in_features
                 biases += layer.out_features
             total += weights + biases
 
     # 메가바이트 단위
-    total = (total * 32) / 7.987
+    total = (total * 32) / 8000000
     return total
 
 
@@ -99,14 +101,14 @@ def output_size(x):
 def F1(x_1):
     global model
     computation_amount_local = Calaulating_model_size(x_1)
-    print("layer " + str(x_1) + "에서의 model_size : " + str(computation_amount_local))
+    #print("layer " + str(x_1) + "에서의 model_size : " + str(computation_amount_local))
     # 모델 사이즈 알아내야함
 
-    '''if computation_amount_local > getAvailable('/'):
-        return -1'''
+    if computation_amount_local > getAvailable('/'):
+        return -1
 
     computation_amount_server = Calaulating_model_size(model_layer_cnt) - computation_amount_local
-    print("computation_amount_server : " + str(computation_amount_server))
+    #print("computation_amount_server : " + str(computation_amount_server))
 
     # RPi4 - 64-bit quad-core Cortex-A72 processor 논문에선 quad-core 1.5 GHz processor -> 그러면 4, 1.5 ??
     # Server - 내 PC (AMD Ryzen 7 3700X 8-Core Processor 3.59 GHz) -> 그러면 8, 3.59 ??
@@ -126,7 +128,7 @@ def LMOS_Algorithm():
 
     y1_min = F1(0)
     y2_min = -F2(0)
-
+    print("layer cnt:",model_layer_cnt)
     # 각 레이어 당 y값 및 y_ideal 구하기 
     for x1 in range(model_layer_cnt):  # 레이어 개수
         y1 = F1(x1)
@@ -157,7 +159,7 @@ def LMOS_Algorithm():
 
     y_ideal = (y1_min, y2_min)
 
-    print("ideal:", y_ideal)
+    #print("ideal:", y_ideal)
 
     # y_nadir 구하기 
     y_nadir = []
@@ -165,16 +167,17 @@ def LMOS_Algorithm():
         if y[0] == y_ideal[0]:
             y_nadir.append(y)
 
-    print("nadir:", y_nadir)
+    #print("nadir:", y_nadir)
 
     # 입실론 지정하기
     e2 = min(y_nadir, key=lambda temp_y: temp_y[0])[1]
-    print("epsilon:", e2)
+    #print("epsilon:", e2)
 
     F = []
 
     while e2 > y_ideal[1]:
-        y_candidate = list(filter(lambda temp_y: temp_y[1] < e2, y_arr))
+        y_candidate = list(filter(lambda temp_y: temp_y[1] < e2 , y_arr))
+        # if y_candidate is empty?
         y_candidate_min = min(y_candidate, key=lambda temp_y: temp_y[0])
         f_e_solution_arr = list(filter(lambda temp_y: temp_y[0] == y_candidate_min[0], y_candidate))
         F = F + f_e_solution_arr
