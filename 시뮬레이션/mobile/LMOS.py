@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 ALEXNET_MODEL_PATH = "model/alexnetlayermodel.pkl"
 model = torch.load(ALEXNET_MODEL_PATH, map_location='cpu')
-model_layer_cnt = 10
+model_layer_cnt = 13
     #len(model.features) + len(model.classifier)
 bandwidth = 100
 plt_color= "r"
@@ -61,21 +61,13 @@ def Calaulating_model_size(x):
             depth_pre = layer.out_channels
             total += weights + biases
 
-
-
-    if (x != 0):
-        # 첫번째 fc layer는 전 레이어가 pulling 이므로 다르게 계산
-        pooling = model.features[-1]
-        layer_1 = model.classifier[0]
-        total += layer_1.out_features * ((pooling.kernel_size ** 2) * depth_pre) + layer_1.out_features
-
-        for layer in model.classifier[1:x]:
-            weights = 0
-            biases = 0
-            if isinstance(layer, nn.Linear):
-                weights += layer.out_features * layer.in_features
-                biases += layer.out_features
-                total += weights + biases
+    for layer in model.classifier[:x]:
+        weights = 0
+        biases = 0
+        if isinstance(layer, nn.Linear):
+            weights += layer.out_features * layer.in_features
+            biases += layer.out_features
+            total += weights + biases
 
     # 메가바이트 단위
     total = (total * 32) / 8000000
@@ -84,7 +76,7 @@ def Calaulating_model_size(x):
 
 def output_size(x):
     # convolution, maxpooling
-    size = 32
+    size = 224
     x += 1
     if x > len(model.features):
         x = x - len(model.features) - 2
@@ -111,13 +103,13 @@ def F1(x_1):
 
     computation_amount_server = Calaulating_model_size(model_layer_cnt) - computation_amount_local
 
-    print("layer : ", x_1)
+    '''print("layer : ", x_1)
     print("edge conv : ",Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500))
     print("Transmission_Latency : ",Transmission_Latency(x_1, bandwidth))
     print("server conv : ",Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590))
     print("total : ", Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500) \
            + Transmission_Latency(x_1, bandwidth) \
-           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590))
+           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590))'''
 
     # RPi4 - 64-bit quad-core Cortex-A72 processor 논문에선 quad-core 1.5 GHz processor -> 그러면 4, 1.5 ??
     # Server - 내 PC (AMD Ryzen 7 3700X 8-Core Processor 3.59 GHz) -> 그러면 8, 3.59 ??
