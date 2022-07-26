@@ -154,20 +154,35 @@ def LMOS_Algorithm():
         if y2 < y2_min:
             y2_min = y2
 
+    # plot
     plot_x = []
     plot_y = []
     for temp_y in y_arr:
         plot_x.append(temp_y[0])
-        plot_y.append(-1 * temp_y[1])
-        plt.text(temp_y[0], -1 * temp_y[1], temp_y[2])
+        plot_y.append(temp_y[1])
+        plt.text(temp_y[0], temp_y[1], temp_y[2])
 
 
     plt.xlabel('Latency')
-    plt.ylabel('Memory Util')
+    plt.ylabel('-Memory Util')
     plt.plot(plot_x, plot_y,color = plt_color ,marker='o', linestyle="-")
     plt.savefig('bandwidth_'+str(bandwidth)+'.png')
     #plt.clf()
     #plt.show()
+
+    # exception
+    if len(y_arr) == 0:
+        return 0
+    '''elif len(y_arr) ==1 :
+        return 1'''
+
+    # test code
+    for i in range(len(y_arr)) :
+        print(y_arr[i][2]," latency:",y_arr[i][0] )
+
+    print("==========================")
+    for i in range(len(y_arr)) :
+        print(y_arr[i][2]," memory:",y_arr[i][1] )
 
     y_ideal = (y1_min, y2_min)
 
@@ -178,7 +193,7 @@ def LMOS_Algorithm():
         if y[0] == y_ideal[0]:
             y_nadir.append(y)
 
-
+    print(y_nadir)
     # 입실론 지정하기
     e2 = min(y_nadir, key=lambda temp_y: temp_y[0])[1]
 
@@ -204,10 +219,10 @@ def LMOS_Algorithm():
 
 
 if __name__ == "__main__":
+    bandwidth = 10
     colors = ["lightcoral", "darkorange","green", "lime", "navy", "purple", "olive","indigo","steelblue","grey"]
     idx = 0;
     print(LMOS_Algorithm())
-    bandwidth = 10
 '''    for i in range(1,21) :
         if i%2 == 1 :
             continue
