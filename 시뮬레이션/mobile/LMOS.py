@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 
 ALEXNET_MODEL_PATH = "model/alexnetlayermodel.pkl"
 model = torch.load(ALEXNET_MODEL_PATH, map_location='cpu')
-model_layer_cnt = len(model.features) + len(model.classifier)
-
-
+model_layer_cnt = 13
+    #len(model.features) + len(model.classifier)
+bandwidth = 100
+plt_color= "r"
 # 단위 변환용 함수
 def Unit(unit):
     units = ['B', 'K', 'M', 'G', 'T']
@@ -57,20 +58,14 @@ def Calaulating_model_size(x):
             weights = layer.out_channels * (layer.kernel_size[0] * layer.kernel_size[1]) * depth_pre
             biases = layer.out_channels
             depth_pre = layer.out_channels
-        total += weights + biases
+            total += weights + biases
 
-    if (x != 0):
-        # 첫번째 fc layer는 전 레이어가 pulling 이므로 다르게 계산
-        pooling = model.features[-1]
-        layer_1 = model.classifier[0]
-        total += layer_1.out_features * ((pooling.kernel_size ** 2) * depth_pre) + layer_1.out_features
-
-        for layer in model.classifier[1:x]:
-            weights = 0
-            biases = 0
-            if isinstance(layer, nn.Linear):
-                weights += layer.out_features * layer.in_features
-                biases += layer.out_features
+    for layer in model.classifier[:x]:
+        weights = 0
+        biases = 0
+        if isinstance(layer, nn.Linear):
+            weights += layer.out_features * layer.in_features
+            biases += layer.out_features
             total += weights + biases
 
     # 메가바이트 단위
@@ -80,7 +75,7 @@ def Calaulating_model_size(x):
 
 def output_size(x):
     # convolution, maxpooling
-    size = 32
+    size = 224
     x += 1
     if x > len(model.features):
         x = x - len(model.features) - 2
@@ -95,27 +90,32 @@ def output_size(x):
         elif isinstance(layer, (nn.MaxPool1d, nn.MaxPool2d, nn.MaxPool3d, nn.AvgPool1d, nn.AvgPool2d, nn.AvgPool3d)):
             size = (size - layer.kernel_size) / layer.stride + 1
 
-    return size * size * depth_pre
+    return (size * size * depth_pre * 32) / 8000000
 
 
 def F1(x_1):
     global model
     computation_amount_local = Calaulating_model_size(x_1)
-    #print("layer " + str(x_1) + "에서의 model_size : " + str(computation_amount_local))
-    # 모델 사이즈 알아내야함
-
+ 
     if computation_amount_local > getAvailable('/'):
         return -1
 
     computation_amount_server = Calaulating_model_size(model_layer_cnt) - computation_amount_local
-    #print("computation_amount_server : " + str(computation_amount_server))
 
+    '''print("layer : ", x_1)
+    print("edge conv : ",Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500))
+    print("Transmission_Latency : ",Transmission_Latency(x_1, bandwidth))
+    print("server conv : ",Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590))
+    print("total : ", Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500) \
+           + Transmission_Latency(x_1, bandwidth) \
+           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590))'''
     # RPi4 - 64-bit quad-core Cortex-A72 processor 논문에선 quad-core 1.5 GHz processor -> 그러면 4, 1.5 ??
     # Server - 내 PC (AMD Ryzen 7 3700X 8-Core Processor 3.59 GHz) -> 그러면 8, 3.59 ??
     # The RPi4 modules and the cloud server are connected to a Wi-Fi network providing a bandwidth of 10 Mbps 로 논문에 나와있는데 정해놓고 제공하는 방식인가 -> 그러면 10?
-    return Conv_Latency(computation_amount_local, CPU_Cores=1, Processor_Speed=1500) \
-           + Transmission_Latency(x_1, bandwidth=0.5) \
-           + Conv_Latency(computation_amount_server, CPU_Cores=1, Processor_Speed=3590)
+
+    return Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500) \
+           + Transmission_Latency(x_1, bandwidth) \
+           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)
 
 
 def F2(x_1):
@@ -128,8 +128,8 @@ def LMOS_Algorithm():
 
     y1_min = F1(0)
     y2_min = -F2(0)
-    print("layer cnt:",model_layer_cnt)
-    # 각 레이어 당 y값 및 y_ideal 구하기 
+
+    # 각 레이어 당 y값 및 y_ideal 구하기
     for x1 in range(model_layer_cnt):  # 레이어 개수
         y1 = F1(x1)
         y2 = -F2(x1)
@@ -145,6 +145,7 @@ def LMOS_Algorithm():
         if y2 < y2_min:
             y2_min = y2
 
+    # plot
     plot_x = []
     plot_y = []
     for temp_y in y_arr:
@@ -152,26 +153,39 @@ def LMOS_Algorithm():
         plot_y.append(temp_y[1])
         plt.text(temp_y[0], temp_y[1], temp_y[2])
 
+
     plt.xlabel('Latency')
     plt.ylabel('-Memory Util')
-    plt.plot(plot_x, plot_y, 'bo')
-    plt.show()
+    plt.plot(plot_x, plot_y,color = plt_color ,marker='o', linestyle="-")
+    plt.savefig('bandwidth_'+str(bandwidth)+'.png')
+    #plt.clf()
+    #plt.show()
+
+    # exception
+    if len(y_arr) == 0:
+        return 0
+    '''elif len(y_arr) ==1 :
+        return 1'''
+
+    # test code
+    for i in range(len(y_arr)) :
+        print(y_arr[i][2]," latency:",y_arr[i][0] )
+
+    print("==========================")
+    for i in range(len(y_arr)) :
+        print(y_arr[i][2]," memory:",y_arr[i][1] )
 
     y_ideal = (y1_min, y2_min)
 
-    #print("ideal:", y_ideal)
-
-    # y_nadir 구하기 
+    # y_nadir 구하기
     y_nadir = []
     for y in y_arr:
         if y[0] == y_ideal[0]:
             y_nadir.append(y)
 
-    #print("nadir:", y_nadir)
-
+    #print(y_nadir)
     # 입실론 지정하기
     e2 = min(y_nadir, key=lambda temp_y: temp_y[0])[1]
-    #print("epsilon:", e2)
 
     F = []
 
@@ -195,19 +209,15 @@ def LMOS_Algorithm():
     return final_answer[2]
 
 
-#if __name__ == "__main__":
-    print(LMOS_Algorithm())
-    # print(F1(0))
-    # print(F1(1))
-    # print(F1(2))
-    # print(F1(3))
-    # print(F1(4))
-    # print(F1(5))
-    # print(F1(6))
-    # print(F1(7))
-    # print(F1(8))
-    # print(F1(9))
-    # print(F1(10))
-    # print(F1(11))
-    # print(F1(12))
-    # print(F1(13))
+if __name__ == "__main__":
+    colors = ["lightcoral", "darkorange","green", "lime", "navy", "purple", "olive","indigo","steelblue","grey"]
+    idx = 0;
+    
+    for i in range(1,21) :
+        if i%2 == 1 :
+            continue
+
+        bandwidth = i*10
+        plt_color = colors[idx]
+        idx+=1
+        print(LMOS_Algorithm())
