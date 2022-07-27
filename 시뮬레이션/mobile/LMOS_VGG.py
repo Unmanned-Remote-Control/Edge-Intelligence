@@ -99,13 +99,13 @@ def output_size(x):
     if x > 1:
         x_2 = 1
         if x == 2:
-            return (model.classifier[0].in_features * 32) / 8000000
+            return (model.classifier[0].in_features * 32) / 1000000
         else:
             x_3 = x - x_2
             for layer in model.classifier[:x_3]:
                 if isinstance(layer, nn.Linear):
                     size = layer.out_features
-            return (size * 32) / 8000000
+            return (size * 32) / 1000000
 
     else:
         x_2 = 0
@@ -119,7 +119,7 @@ def output_size(x):
         elif isinstance(layer, (nn.MaxPool2d, nn.AvgPool2d, nn.AdaptiveAvgPool2d)):
             size = (size - layer.kernel_size) / layer.stride + 1
 
-    return (size * size * depth_pre * 32) / 8000000
+    return (size * size * depth_pre * 32) / 1000000
 
 
 def F1(x_1):
@@ -142,9 +142,9 @@ def F1(x_1):
     # RPi4 - 64-bit quad-core Cortex-A72 processor 논문에선 quad-core 1.5 GHz processor -> 그러면 4, 1.5 ??
     # Server - 내 PC (AMD Ryzen 7 3700X 8-Core Processor 3.59 GHz) -> 그러면 8, 3.59 ??
     # The RPi4 modules and the cloud server are connected to a Wi-Fi network providing a bandwidth of 10 Mbps 로 논문에 나와있는데 정해놓고 제공하는 방식인가 -> 그러면 10?
-    return Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500) \
+    return Conv_Latency(computation_amount_local, CPU_Cores=1, Processor_Speed=1500) \
            + Transmission_Latency(x_1, bandwidth) \
-           + Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)
+           + Conv_Latency(computation_amount_server, CPU_Cores=1, Processor_Speed=35900)
 
 
 def F2(x_1):
@@ -155,13 +155,13 @@ def F2(x_1):
 def LMOS_Algorithm():
     y_arr = []
 
-    y1_min = F1(0)
-    y2_min = -F2(0)
+    y2_min = F1(0)
+    y1_min = -F2(0)
 
     # 각 레이어 당 y값 및 y_ideal 구하기
     for x1 in range(model_layer_cnt):  # 레이어 개수
-        y1 = F1(x1)
-        y2 = -F2(x1)
+        y2 = F1(x1)
+        y1 = -F2(x1)
 
         if y1 == -1:  # available memory 초과인 경우
             break
@@ -173,6 +173,11 @@ def LMOS_Algorithm():
 
         if y2 < y2_min:
             y2_min = y2
+
+    if len(y_arr)==0 :
+        return -1
+    elif len(y_arr)==1:
+        return 0
 
     plot_x = []
     plot_y = []
@@ -200,7 +205,7 @@ def LMOS_Algorithm():
 
 
     # 입실론 지정하기
-    e2 = min(y_nadir, key=lambda temp_y: temp_y[0])[1]
+    e2 = min(y_nadir, key=lambda temp_y: temp_y[1])[1]
 
     F = []
 
@@ -226,25 +231,30 @@ def LMOS_Algorithm():
 if __name__ == "__main__":
     colors = ["lightcoral", "darkorange","green", "lime", "navy", "purple", "olive","indigo","steelblue","grey"]
     idx = 0
+    '''
     for i in range(model_layer_cnt):
         computation_amount_local = Calaulating_model_size(i)
         computation_amount_server = Calaulating_model_size(model_layer_cnt) - computation_amount_local
-        print("layer : ",i)
-        print("Conv_Latency_Edge : "+ str(Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500)))
-        print("Transmission_Latency : "+ str(Transmission_Latency(i, bandwidth)))
-        print("Conv_Latency_Server : "+ str(Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)))
-        print("memory_usage : -"+ str(Calaulating_model_size(i)))
+        print("layer : ", i)
+        print("Conv_Latency_Edge : " + str(Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500)))
+        print("Transmission_Latency : " + str(Transmission_Latency(i, bandwidth)))
+        print(
+            "Conv_Latency_Server : " + str(Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)))
+        print("memory_usage : -" + str(Calaulating_model_size(i)))
         print('----------------------------------------------------------------------------')
+    '''
+    for i in range(1, 21):
+        bandwidth = i * 10
+        print("bandwidth :",bandwidth)
+        print("point : ",LMOS_Algorithm())
+        print("-------------------------------------------")
+    '''
     #bandwidth = 10
     #print(LMOS_Algorithm())
-
-    '''
-    for i in range(11) :
-        if i == 0:
-            i = 0.5
-        bandwidth = i * 20
-        plt_color = colors[idx]
-        idx+=1
+    print(model_layer_cnt)
+    for i in range(10,20) :
+        bandwidth = i
+        plt_color = colors[0]
+        idx += 1
         print(LMOS_Algorithm())
     '''
-    print (model)
