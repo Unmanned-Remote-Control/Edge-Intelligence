@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import tqdm as tqdm
 from torchvision import transforms
 import torch.utils.data as Data
 from data import get_data_set
@@ -10,6 +11,10 @@ import pickle
 import io
 import sys
 import time
+import pandas as pd
+import yaml
+import tqdm
+
 
 _IMG_SIZE = 32
 _NUM_CHANNELS = 3
@@ -65,11 +70,13 @@ def receiveData(server, model):
 
 if __name__=="__main__":
 	model=torch.load(ALEXNET_MODEL_PATH, map_location='cpu')
+	#model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 	device = torch.device("cpu")
 	torch.set_num_threads(3)
 	test_x,test_y,test_l=get_data_set("test")
 	test_x=torch.from_numpy(test_x[0:10]).float()
 	test_y=torch.from_numpy(test_y[0:10]).long()
+	print(model)
 	print("Model loaded successfully.")
 	server=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.setblocking(1)

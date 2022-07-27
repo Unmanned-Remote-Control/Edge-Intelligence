@@ -1,12 +1,11 @@
+#VGG에 맞춘 알고리즘
 import os
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-ALEXNET_MODEL_PATH = "model/alexnetlayermodel.pkl"
-model = torch.load(ALEXNET_MODEL_PATH, map_location='cpu')
-model_layer_cnt = len(model.features) + len(model.classifier)
-
+model = torch.hub.load('pytorch/vision:v0.10.0', 'vgg19', pretrained=True)
+model_layer_cnt = len(model.features) + 1 + len(model.classifier)
 bandwidth = 100
 plt_color= "r"
 # 단위 변환용 함수
@@ -44,23 +43,36 @@ def Transmission_Latency(x, bandwidth):
 def Calaulating_model_size(x):
     total = 0
     depth_pre = 3
+    x_1 = 0
+    x_2 = 0
+    x_3 = 0
     x += 1
     if x > len(model.features):
-        x_ = len(model.features)
-        x = x - x_
+        x_1 = len(model.features)
+        x = x - x_1
     else:
-        x_ = x
+        x_1 = x
         x = 0
+    if x > 1:
+        x_2 = 1
+        if x == 2:
+            x_3 = 0
+        x_3 = x - x_2
+    else:
+        x_2 = 0
+        x_3 = 0
 
-    for layer in model.features[:x_]:
+
+    for layer in model.features[:x_1]:
+        weights = 0
+        biases = 0
         if isinstance(layer, (nn.Conv2d, nn.Conv1d)):
-            weights = layer.out_channels * (layer.kernel_size[0] * layer.kernel_size[1]) * depth_pre
+            weights = layer.out_channels * (layer.kernel_size[0] * layer.kernel_size[1]) * layer.in_channels
             biases = layer.out_channels
-            depth_pre = layer.out_channels
 
             total += weights + biases
 
-    for layer in model.classifier[:x]:
+    for layer in model.classifier[:x_3]:
         weights = 0
         biases = 0
         if isinstance(layer, nn.Linear):
@@ -79,16 +91,32 @@ def output_size(x):
     size = 224
     x += 1
     if x > len(model.features):
-        x = x - len(model.features) - 2
-        return model.classifier[x].out_features
+        x_1 = len(model.features)
+        x = x - x_1
     else:
-        x_ = x
+        x_1 = x
+        x = 0
+    if x > 1:
+        x_2 = 1
+        if x == 2:
+            return (model.classifier[0].in_features * 32) / 8000000
+        else:
+            x_3 = x - x_2
+            for layer in model.classifier[:x_3]:
+                if isinstance(layer, nn.Linear):
+                    size = layer.out_features
+            return (size * 32) / 8000000
+
+    else:
+        x_2 = 0
+        x_3 = 0
+
     depth_pre = 3
-    for layer in model.features[:x_]:
-        if isinstance(layer, (nn.Conv2d, nn.Conv1d)):
+    for layer in model.features[:x_1]:
+        if isinstance(layer, nn.Conv2d):
             size = (size - layer.kernel_size[0] + 2 * layer.padding[0]) / layer.stride[0] + 1
             depth_pre = layer.out_channels
-        elif isinstance(layer, (nn.MaxPool1d, nn.MaxPool2d, nn.MaxPool3d, nn.AvgPool1d, nn.AvgPool2d, nn.AvgPool3d)):
+        elif isinstance(layer, (nn.MaxPool2d, nn.AvgPool2d, nn.AdaptiveAvgPool2d)):
             size = (size - layer.kernel_size) / layer.stride + 1
 
     return (size * size * depth_pre * 32) / 8000000
@@ -198,9 +226,15 @@ def LMOS_Algorithm():
 if __name__ == "__main__":
     colors = ["lightcoral", "darkorange","green", "lime", "navy", "purple", "olive","indigo","steelblue","grey"]
     idx = 0
-    for i in range(14):
-        print("i : "+str(i)+" memory_utilization : "+ str(Calaulating_model_size(i)))
-
+    for i in range(model_layer_cnt):
+        computation_amount_local = Calaulating_model_size(i)
+        computation_amount_server = Calaulating_model_size(model_layer_cnt) - computation_amount_local
+        print("layer : ",i)
+        print("Conv_Latency_Edge : "+ str(Conv_Latency(computation_amount_local, CPU_Cores=4, Processor_Speed=1500)))
+        print("Transmission_Latency : "+ str(Transmission_Latency(i, bandwidth)))
+        print("Conv_Latency_Server : "+ str(Conv_Latency(computation_amount_server, CPU_Cores=8, Processor_Speed=3590)))
+        print("memory_usage : -"+ str(Calaulating_model_size(i)))
+        print('----------------------------------------------------------------------------')
     #bandwidth = 10
     #print(LMOS_Algorithm())
 
@@ -213,3 +247,4 @@ if __name__ == "__main__":
         idx+=1
         print(LMOS_Algorithm())
     '''
+    print (model)
