@@ -152,6 +152,8 @@ def LMOS_Algorithm():
         return -1
     elif len(y_arr)==1:
         return 0
+    
+    #그래프 그리는 부분
     plot_x = []
     plot_y = []
     for temp_y in y_arr:
@@ -166,62 +168,34 @@ def LMOS_Algorithm():
     plt.savefig('bandwidth_'+str(bandwidth)+'.png')
     #plt.clf()
     #plt.show()
-
-    #도미넌트한 결과 제거
     y_ideal = (y1_min, y2_min)
+    '''
+    #도미넌트한 결과 제거
+    
     for f in y_arr:
         if f[0] == min(y_arr, key =lambda temp_y: temp_y[0]) and f[1] == min(y_arr,key = lambda temp_y: temp_y[1]):
             y_arr.remove(f)
-
-    #그래프 그리는 부분
-    plot_x = []
-    plot_y = []
-    for temp_y in y_arr:
-        plot_x.append(temp_y[0])
-        plot_y.append(-1 * temp_y[1])
-        plt.text(temp_y[0], -1 * temp_y[1], temp_y[2])
-
-    plt.xlabel('Latency')
-    plt.ylabel('Memory Util')
-    plt.plot(plot_x, plot_y, color=plt_color, marker='o', linestyle="-")
-    plt.savefig('bandwidth_' + str(bandwidth) + '.png')
-    # plt.clf()
-    # plt.show()
+    '''
 
     # y_nadir 구하기 - 원래 코드
-    '''
     y_nadir = []
     for y in y_arr:
         if y[0] == y_ideal[0]:
             y_nadir.append(y)
 
     # 입실론 지정하기
-    e2 = min(y_nadir, key=lambda temp_y: temp_y[0])[1]
-    '''
-
-    # y_nadir 구하기
-    y1_nadir = 100
-    y2_nadir = 0
-    for y in y_arr:
-        if y[0] == y_ideal[0]:
-            if y2_nadir > y[1]:
-                y2_nadir = y[1]
-        elif y[1] == y_ideal[1]:
-            if y1_nadir > y[0]:
-                y1_nadir = y[0]
-    y_nadir = (y1_nadir, y2_nadir)
-
-    # 입실론 지정하기
-    e2 = y_nadir[1]
-
+    e2 = min(y_nadir, key=lambda temp_y: temp_y[1])[1]
+    #print("epsilon: ", e2)
+   
     F = []
     while e2 > y_ideal[1]:
-        y_candidate = list(filter(lambda temp_y: temp_y[1] <= e2, y_arr))
+        y_candidate = list(filter(lambda temp_y: temp_y[1] < e2, y_arr))
         y_candidate_min = min(y_candidate, key=lambda temp_y: temp_y[0])
         f_e_solution_arr = list(filter(lambda temp_y: temp_y[0] == y_candidate_min[0], y_candidate))
         F = F + f_e_solution_arr
         e2 = min(f_e_solution_arr, key=lambda temp_y: temp_y[1])[1]
 
+    print(F)
     # F에서 dominant한 것 제외
     final_answers = []
     for f in F:
@@ -237,6 +211,9 @@ def LMOS_Algorithm():
 
 
 if __name__ == "__main__":
+    for i in range(model_layer_cnt):
+        print("i : ",i)
+        print("model_size : ",Calaulating_model_size(i))
     '''
     colors = ["lightcoral", "darkorange","green", "lime", "navy", "purple", "olive","indigo","steelblue","grey"]
     idx = 0
@@ -250,12 +227,13 @@ if __name__ == "__main__":
         print("memory_usage : -"+ str(Calaulating_model_size(i)))
         print('----------------------------------------------------------------------------')
     '''
+    '''
     #bandwidth = 10
     #print(LMOS_Algorithm())
     for i in range(1,20) :
         bandwidth = i * 5
         print(LMOS_Algorithm())
-
+    '''
 
     '''
     for i in range(11) :
